@@ -194,7 +194,7 @@
     <div class="nav-right">
       <a class="nav-link" href="#calculator">Calculator</a>
       <a class="nav-link" href="#timeline">Timeline</a>
-      <a class="nav-link" href="#pro-tools">Pro Tools</a>
+      <a class="nav-link" href="#pro-tools">Growth Lab</a>
       <a class="nav-link" href="#tips">Tips</a>
       <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
       <button class="theme-btn" onclick="window.print()">Save / Print</button>
@@ -206,7 +206,7 @@
     <header class="hero">
       <div class="hero-eyebrow">Founder mode · Pro Edition</div>
       <h1>The SaaS<br><em>Growth</em> Simulator</h1>
-      <p class="hero-sub">Model users, churn, pricing, costs, and growth — with AI-powered analysis, scenario stress tests, cohort modeling, and a sensitivity matrix built for serious founders.</p>
+      <p class="hero-sub">Model users, churn, pricing, costs, and growth — with scenario stress tests, cohort modeling, payback analysis, and a sensitivity matrix built for serious founders.</p>
       <div class="hero-bar">
         <span class="hero-bar-label">Billing price</span>
         <div class="money-input-wrap">
@@ -300,19 +300,6 @@
             <div class="panel-hdr"><span class="panel-label">Scenario comparison</span></div>
             <div class="scenario-grid" id="scenarioGrid"></div>
           </div>
-          <div class="ai-wrap">
-            <div class="ai-hdr">
-              <div class="ai-dot"></div>
-              <div class="ai-title">AI Advisor <span class="pro-badge">Pro</span></div>
-              <button class="ai-btn" onclick="runAIAnalysis()" id="aiAnalyzeBtn">Analyze my model</button>
-            </div>
-            <div class="ai-body" id="aiBody"><span style="color:var(--muted);font-family:var(--mono);font-size:12px">Click "Analyze my model" for a personalized AI assessment of your SaaS metrics, biggest risks, and what to fix first.</span></div>
-            <div class="ai-actions">
-              <button class="ai-btn" onclick="askAI('What is my biggest growth bottleneck right now?')">Biggest bottleneck</button>
-              <button class="ai-btn" onclick="askAI('How should I price my SaaS based on these numbers?')">Pricing advice</button>
-              <button class="ai-btn" onclick="askAI('What does my path to $10k MRR look like and what are the risks?')">Path to $10k MRR</button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -321,7 +308,7 @@
 
     <section id="pro-tools">
       <div class="section-head">
-        <span class="section-title">Pro Tools <span class="pro-badge">Pro</span></span>
+        <span class="section-title">Growth Lab <span class="pro-badge">Pro</span></span>
         <span class="section-sub">scenario builder · sensitivity · cohorts · CAC payback · pricing tiers</span>
       </div>
       <div class="tab-bar">
@@ -374,7 +361,7 @@
 
     <footer>
       <div>SaaS Growth Simulator Pro · Built to test whether your product can really scale.</div>
-      <div style="margin-top:.5rem">AI analysis · Scenario builder · Cohort modeling · Sensitivity matrix · CSV export</div>
+      <div style="margin-top:.5rem">Scenario builder · Cohort modeling · CAC payback · Sensitivity matrix · CSV export</div>
     </footer>
   </div>
 
@@ -771,44 +758,6 @@
       var a=document.createElement('a');
       a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
       a.download='saas-projection.csv';a.click();
-    }
-
-    // ── AI ADVISOR ───────────────────────────────────────────
-    function getModelSummary(){
-      var mp=mep(parseMoney(document.getElementById('price').value));
-      var su=+document.getElementById('startingUsers').value||0;
-      var nu=+document.getElementById('newUsers').value||0;
-      var ch=+document.getElementById('churn').value||0;
-      var co=parseMoney(document.getElementById('monthlyCosts').value);
-      var cac=parseMoney(document.getElementById('cac').value);
-      var mo=+document.getElementById('projectionMonths').value||12;
-      var ltv=ch>0?(mp/(ch/100)):0;
-      return 'Monthly price: $'+Math.round(mp)+'/mo, Starting users: '+su+', New users/month: '+nu+', Monthly churn: '+ch+'%, Monthly costs: $'+co+', CAC: $'+cac+', LTV: $'+Math.round(ltv)+', LTV/CAC: '+(cac>0?(ltv/cac).toFixed(1):'N/A')+'x, Projection window: '+mo+' months';
-    }
-    function runAIAnalysis(){
-      callAI('You are a concise SaaS growth advisor. Give 3-4 specific, actionable insights in plain prose (no bullet points, no markdown).\n\nSaaS Model: '+getModelSummary()+'\n\nGive your honest assessment: what is working, the biggest risk, and the single most important lever to pull right now. Keep it to 3 short paragraphs.');
-    }
-    function askAI(question){
-      callAI('You are a SaaS growth advisor. Answer the question based on the model. Be specific, direct, and concise — 2-3 paragraphs in plain prose (no bullets, no markdown).\n\nModel: '+getModelSummary()+'\n\nQuestion: '+question);
-    }
-    async function callAI(prompt){
-      var body=document.getElementById('aiBody');
-      var btns=document.querySelectorAll('.ai-btn');
-      btns.forEach(function(b){b.disabled=true;});
-      body.innerHTML='<div class="ai-loading"><div class="ai-spin"></div>Analyzing your model…</div>';
-      try{
-        var res=await fetch('https://api.anthropic.com/v1/messages',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-        });
-        var data=await res.json();
-        var text=(data.content||[]).map(function(c){return c.text||'';}).join('');
-        body.innerHTML=text.split('\n').filter(function(l){return l.trim();}).map(function(l){return '<p>'+l.trim()+'</p>';}).join('');
-      }catch(e){
-        body.innerHTML='<p style="color:var(--red);font-family:var(--mono);font-size:12px">Could not connect to AI. Check your connection and try again.</p>';
-      }finally{
-        btns.forEach(function(b){b.disabled=false;});
-      }
     }
 
     // ── INIT ─────────────────────────────────────────────────
