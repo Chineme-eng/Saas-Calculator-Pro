@@ -178,6 +178,14 @@
     .tier-summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap}
     .tier-summary span{color:var(--text)}
     .divider{height:1px;background:var(--border);margin:3rem 0}
+    .saved-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .saved-select{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none}
+    .saved-list{display:grid;grid-template-columns:1fr;gap:10px}
+    .saved-empty{font-family:var(--mono);font-size:12px;color:var(--muted);padding:10px 0}
+    .saved-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-family:var(--mono);font-size:10px;color:var(--muted)}
+    .playbook-card{margin-top:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+    .playbook-title{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+    .playbook-body{font-size:14px;color:var(--text);line-height:1.65}
     .tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:1rem}
     .tip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
     .tip-num{font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:6px}
@@ -227,7 +235,7 @@
           <div class="panel">
             <div class="panel-hdr"><span class="panel-label">SaaS presets</span></div>
             <div class="preset-grid" id="presetGrid"></div>
-            <div class="small-note">These presets auto-adjust billing period, price, starting users, growth, churn, and monthly costs.</div>
+            <div class="small-note">These presets auto-adjust billing period, price, starting users, growth, churn, and monthly costs.</div><div class="playbook-card"><div class="playbook-title">Preset playbook</div><div class="playbook-body" id="presetPlaybook"></div></div>
           </div>
           <div class="panel">
             <div class="panel-hdr"><span class="panel-label">Core inputs</span></div>
@@ -320,6 +328,14 @@
       </div>
       <div class="tab-pane active" id="tab-scenarios">
         <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">Edit each scenario and compare projected MRR side by side. Base is pulled from your current inputs.</p>
+        <div class="saved-tools">
+          <button class="mini-btn" onclick="saveCurrentScenario()">Save current scenario</button>
+          <select class="saved-select" id="savedScenarioSelect" onchange="loadSavedScenario(this.value)">
+            <option value="">Load a saved scenario…</option>
+          </select>
+          <button class="mini-btn" onclick="deleteSavedScenario()">Delete selected</button>
+        </div>
+        <div class="saved-list" id="savedScenarioList"></div>
         <div class="sb-grid" id="scenarioBuilderGrid"></div>
       </div>
       <div class="tab-pane" id="tab-sensitivity">
@@ -360,7 +376,7 @@
     </section>
 
     <footer>
-      <div>SaaS Growth Simulator Pro · Built to test whether your product can really scale.</div>
+      <div>SaaS Growth Engine Pro · Built to pressure-test whether your product can really scale.</div>
       <div style="margin-top:.5rem">Scenario builder · Cohort modeling · CAC payback · Sensitivity matrix · CSV export</div>
     </footer>
   </div>
@@ -378,23 +394,31 @@
 
     // ── DATA ─────────────────────────────────────────────────
     var PRESETS=[
-      {id:'micro',      icon:'🧩',name:'Micro SaaS',    desc:'Lean solo tool',               bp:'month',price:12, su:20, nu:10, ch:5,  co:350,  cac:8},
-      {id:'startup',    icon:'🚀',name:'Startup Push',  desc:'Actively growing app',         bp:'month',price:20, su:25, nu:20, ch:6,  co:1200, cac:15},
-      {id:'b2b',        icon:'🏢',name:'B2B SaaS',      desc:'Higher price, lower volume',   bp:'month',price:79, su:10, nu:6,  ch:3,  co:2500, cac:60},
-      {id:'consumer',   icon:'📱',name:'Consumer App',  desc:'Lower price, faster churn',    bp:'month',price:9,  su:100,nu:80, ch:9,  co:1800, cac:6},
-      {id:'weekly-tool',icon:'⏱️',name:'Weekly Tool',   desc:'Low-ticket fast recurring',    bp:'week', price:5,  su:80, nu:35, ch:11, co:700,  cac:5},
-      {id:'annual-b2b', icon:'📦',name:'Annual B2B',    desc:'Yearly contracts, lower churn',bp:'year', price:600,su:12, nu:4,  ch:1.5,co:3200, cac:120},
-      {id:'ai-tool',    icon:'🤖',name:'AI Tool',       desc:'Higher infra, strong pricing', bp:'month',price:29, su:35, nu:30, ch:7,  co:2600, cac:22}
+      {id:'micro',      icon:'🧩',name:'Micro SaaS',      desc:'Lean solo operator model',       bp:'month',price:12, su:20, nu:10, ch:5,   co:350,  cac:8,   note:'Best for a focused utility or niche workflow tool. Works when overhead is low and retention stays stable.'},
+      {id:'startup',    icon:'🚀',name:'Startup SaaS',    desc:'Actively scaling product',       bp:'month',price:24, su:30, nu:24, ch:6,   co:1400, cac:18,  note:'Good for a startup pushing growth before perfecting efficiency. You need steady acquisition and tight churn control.'},
+      {id:'b2b',        icon:'🏢',name:'B2B SaaS',        desc:'Higher price, lower volume',     bp:'month',price:79, su:10, nu:6,  ch:3,   co:2500, cac:60,  note:'Works when each customer is worth more and sales cycles are slower. Strong for service-backed or ops-heavy products.'},
+      {id:'consumer',   icon:'📱',name:'B2C SaaS',        desc:'Low ticket, faster churn',       bp:'month',price:9,  su:100,nu:80, ch:9,   co:1800, cac:6,   note:'A volume game. You need large top-of-funnel traffic and a product sticky enough to offset consumer churn.'},
+      {id:'weekly-tool',icon:'⏱️',name:'Weekly Tool',     desc:'Fast recurring low-ticket offer',bp:'week', price:5,  su:80, nu:35, ch:11,  co:700,  cac:5,   note:'Useful for rapid cash flow testing, but billing fatigue can hit hard. Only works when the value is obvious every week.'},
+      {id:'annual-b2b', icon:'📦',name:'Annual B2B',      desc:'Yearly contracts, lower churn',  bp:'year', price:600,su:12, nu:4,  ch:1.5, co:3200, cac:120, note:'Best when you sell trust, team workflows, or mission-critical features. The upside is upfront cash and healthier retention.'},
+      {id:'ai-saas',    icon:'🤖',name:'AI SaaS',         desc:'Higher infra, premium pricing',  bp:'month',price:29, su:35, nu:30, ch:7,   co:2600, cac:22,  note:'Useful for AI copilots, generators, and workflow tools. Margin pressure matters, so price must stay ahead of infrastructure costs.'},
+      {id:'agency',     icon:'🧠',name:'Agency SaaS',     desc:'Productized service hybrid',     bp:'month',price:149,su:8,  nu:5,  ch:4,   co:2200, cac:95,  note:'Fits products with onboarding, reporting, or hands-on support. Fewer customers can still create meaningful revenue.'},
+      {id:'freemium',   icon:'🪄',name:'Freemium SaaS',    desc:'Free funnel with paid upgrades', bp:'month',price:14, su:180,nu:120,ch:8.5, co:2100, cac:4,   note:'Great for growth loops and easy adoption, but conversion has to be real. A weak upgrade path makes this model look bigger than it is.'}
     ];
     var MODES=[{id:'mrr',label:'MRR'},{id:'users',label:'Users'},{id:'breakeven',label:'Break-even'},{id:'ltv',label:'LTV'}];
     var BPS=[{id:'week',label:'Week',tm:4.3333},{id:'month',label:'Month',tm:1},{id:'year',label:'Year',tm:1/12}];
     var activePreset=PRESETS[1],activeMode='mrr',activeBP='month';
+    var savedScenarios=[];
 
     // ── RENDER HELPERS ───────────────────────────────────────
     function renderPresets(){
       document.getElementById('presetGrid').innerHTML=PRESETS.map(function(p){
         return '<div class="preset-card'+(p.id===activePreset.id?' active':'')+'" onclick="pickPreset(\''+p.id+'\')"><span class="pc-icon">'+p.icon+'</span><div class="pc-name">'+p.name+'</div><div class="pc-desc">'+p.desc+'</div></div>';
       }).join('');
+      updatePresetPlaybook();
+    }
+    function updatePresetPlaybook(){
+      var note=activePreset && activePreset.note ? activePreset.note : 'Use this preset as a starting point, then stress test price, growth, and churn before deciding what is realistic.';
+      document.getElementById('presetPlaybook').textContent=note;
     }
     function renderModes(){
       document.getElementById('modeRow').innerHTML=MODES.map(function(m){
@@ -546,6 +570,7 @@
 
       updateChart();
       refreshActiveTab();
+      renderSavedScenarios();
     }
 
     // ── CHART ────────────────────────────────────────────────
@@ -584,6 +609,67 @@
           scales:{x:{grid:{color:gc},ticks:{color:tc,font:{family:"'IBM Plex Mono',monospace",size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{family:"'IBM Plex Mono',monospace",size:10},callback:function(v){return chartView==='users'?v.toLocaleString():'$'+v.toLocaleString();}}}}
         }
       });
+    }
+
+    function getCurrentScenarioSnapshot(){
+      return {
+        name: activePreset.name+' · '+new Date().toLocaleDateString(),
+        preset: activePreset.name,
+        bp: activeBP,
+        price: parseMoney(document.getElementById('price').value),
+        su: +document.getElementById('startingUsers').value||0,
+        nu: +document.getElementById('newUsers').value||0,
+        ch: +document.getElementById('churn').value||0,
+        co: parseMoney(document.getElementById('monthlyCosts').value),
+        cac: parseMoney(document.getElementById('cac').value),
+        target: parseMoney(document.getElementById('targetMRR').value),
+        months: +document.getElementById('projectionMonths').value||12
+      };
+    }
+    function renderSavedScenarios(){
+      var sel=document.getElementById('savedScenarioSelect');
+      var list=document.getElementById('savedScenarioList');
+      if(!sel||!list)return;
+      sel.innerHTML='<option value="">Load a saved scenario…</option>'+savedScenarios.map(function(s,i){
+        return '<option value="'+i+'">'+s.name+'</option>';
+      }).join('');
+      if(!savedScenarios.length){
+        list.innerHTML='<div class="saved-empty">No saved scenarios yet. Save your best setup, then compare and reload it later.</div>';
+        return;
+      }
+      list.innerHTML=savedScenarios.map(function(s,i){
+        return '<div class="scenario-card"><div class="scenario-top"><div><div class="scenario-name">'+s.name+'</div><div class="scenario-desc">'+s.preset+' · '+s.months+' mo projection · '+s.bp+' billing</div></div><div class="scenario-price">'+fm(s.price)+'</div></div><div class="saved-chip">'+s.su+' start</div> <div class="saved-chip">'+s.nu+'/mo</div> <div class="saved-chip">'+s.ch+'% churn</div> <div class="saved-chip">'+fm(s.co)+' costs</div></div>';
+      }).join('');
+    }
+    function saveCurrentScenario(){
+      var snap=getCurrentScenarioSnapshot();
+      savedScenarios.unshift(snap);
+      if(savedScenarios.length>6)savedScenarios=savedScenarios.slice(0,6);
+      renderSavedScenarios();
+      document.getElementById('savedScenarioSelect').value='0';
+    }
+    function loadSavedScenario(idx){
+      if(idx===''||savedScenarios[idx]==null)return;
+      var s=savedScenarios[idx];
+      activeBP=s.bp;
+      document.getElementById('price').value=s.price.toLocaleString();
+      document.getElementById('priceTop').value=s.price.toLocaleString();
+      document.getElementById('startingUsers').value=s.su;
+      document.getElementById('newUsers').value=s.nu;
+      document.getElementById('churn').value=s.ch;
+      document.getElementById('monthlyCosts').value=s.co.toLocaleString();
+      document.getElementById('cac').value=s.cac.toLocaleString();
+      document.getElementById('targetMRR').value=s.target.toLocaleString();
+      document.getElementById('projectionMonths').value=String(s.months);
+      renderBPs();
+      update();
+    }
+    function deleteSavedScenario(){
+      var sel=document.getElementById('savedScenarioSelect');
+      if(!sel||sel.value==='')return;
+      savedScenarios.splice(+sel.value,1);
+      renderSavedScenarios();
+      sel.value='';
     }
 
     // ── TABS ─────────────────────────────────────────────────
@@ -766,6 +852,7 @@
     renderBPs();
     pickPreset(activePreset.id);
     renderScenarios();
+    renderSavedScenarios();
     setTimeout(updateChart,150);
   </script>
 </body>
