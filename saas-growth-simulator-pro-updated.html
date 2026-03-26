@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaaS Growth Simulator — Pro</title>
+  <link rel="icon" type="image/png" href="KP.png">
+  <link href="https://fonts.googleapis.com/css2?family=Georgia&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#faf7f2;--bg2:#f3efe8;--bg3:#ede8df;--surface:#ffffff;
+      --border:#ddd8ce;--border2:#c8c2b6;--text:#1a1612;--muted:#7a7268;
+      --faint:#b8b2a8;--accent:#b85c2a;--accent2:#9a4a20;--accent-bg:#fdf0e8;
+      --green:#2e7d52;--green-bg:#eaf4ee;--red:#b83232;--red-bg:#fdeaea;
+      --amber:#a06010;--amber-bg:#fef6e4;--blue:#466b94;--blue-bg:#edf3fa;
+      --serif:'EB Garamond',Georgia,serif;--mono:'IBM Plex Mono',monospace;
+      --r:8px;--r2:12px;--shadow:0 1px 4px rgba(26,22,18,.07);--shadow2:0 2px 12px rgba(26,22,18,.1);
+    }
+    [data-theme="dark"]{
+      --bg:#100e0b;--bg2:#181510;--bg3:#201d18;--surface:#241f19;
+      --border:#332d25;--border2:#4a4238;--text:#ede6da;--muted:#8a8070;
+      --faint:#4a4238;--accent:#d4784a;--accent2:#e8905c;--accent-bg:#2a1e14;
+      --green:#3aaa6a;--green-bg:#0e2018;--red:#d45050;--red-bg:#220e0e;
+      --amber:#c88030;--amber-bg:#201608;--blue:#6d96c7;--blue-bg:#12202f;
+      --shadow:0 1px 4px rgba(0,0,0,.3);--shadow2:0 2px 12px rgba(0,0,0,.4);
+    }
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--serif);font-size:16px;line-height:1.7;min-height:100vh;transition:background .3s,color .3s}
+    nav{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:52px;backdrop-filter:blur(8px)}
+    .nav-brand{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);text-decoration:none}
+    .nav-brand span{color:var(--accent)}
+    .pro-badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:4px}
+    .nav-right{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+    .nav-link{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);text-decoration:none;transition:color .15s}
+    .nav-link:hover{color:var(--accent)}
+    .theme-btn,.mini-btn,.mode-btn,.period-btn,.export-btn{font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+    .theme-btn:hover,.mini-btn:hover,.mode-btn:hover,.period-btn:hover,.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .export-btn:hover{border-color:var(--green);color:var(--green)}
+    .mode-btn.active,.period-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .wrap{max-width:1180px;margin:0 auto;padding:3rem 2rem 6rem}
+    .hero{text-align:center;max-width:760px;margin:0 auto 3.5rem;padding-bottom:3rem;border-bottom:1px solid var(--border)}
+    .hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+    h1{font-family:var(--serif);font-size:clamp(36px,6vw,64px);font-weight:400;line-height:1.05;letter-spacing:-.01em;margin-bottom:1rem}
+    h1 em{font-style:italic;color:var(--accent)}
+    .hero-sub{font-size:17px;color:var(--muted);line-height:1.6;max-width:640px;margin:0 auto 2rem}
+    .hero-bar{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:1.25rem 1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--shadow)}
+    .hero-bar-label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .money-input-wrap{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden}
+    .money-prefix{font-family:var(--mono);font-size:18px;padding:8px 12px;color:var(--muted);border-right:1px solid var(--border);background:var(--bg3)}
+    .money-input{background:transparent;border:none;outline:none;font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text);padding:8px 12px;width:140px;text-align:right}
+    .section-head{margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:1rem;justify-content:space-between;flex-wrap:wrap}
+    .section-title{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--text)}
+    .section-sub{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+    .main-grid{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:20px;align-items:start;margin-bottom:3rem}
+    @media(max-width:960px){.main-grid{grid-template-columns:1fr}}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;box-shadow:var(--shadow)}
+    .panel+.panel{margin-top:16px}
+    .panel-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .panel-label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+    .preset-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all .15s}
+    .preset-card:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px)}
+    .preset-card.active{border-color:var(--accent);background:var(--accent-bg);box-shadow:var(--shadow2)}
+    .pc-icon{font-size:18px;margin-bottom:6px;display:block}
+    .pc-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+    .pc-desc{font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.4}
+    .toggle-row{display:flex;gap:8px;flex-wrap:wrap}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .field label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .input,.select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:11px 12px;font-family:var(--serif);font-size:15px;color:var(--text);outline:none;transition:border-color .15s}
+    .input:focus,.select:focus{border-color:var(--accent)}
+    .mono{font-family:var(--mono)}
+    .inline-money{display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .inline-money span{padding:11px 12px;font-family:var(--mono);color:var(--muted);background:var(--bg3);border-right:1px solid var(--border)}
+    .inline-money input{border:none;outline:none;background:transparent;color:var(--text);font-family:var(--mono);font-size:15px;padding:11px 12px;width:100%}
+    .results{display:flex;flex-direction:column;gap:14px;position:sticky;top:72px}
+    @media(max-width:960px){.results{position:static}}
+    .big-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:22px 24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .big-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+    .big-label{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .big-val{font-family:var(--serif);font-size:52px;line-height:1;letter-spacing:-.02em;font-weight:400;color:var(--accent)}
+    .big-sub{font-family:var(--mono);font-size:12px;margin-top:8px;color:var(--muted);line-height:1.8}
+    .mode-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+    .stat-l{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .stat-v{font-family:var(--mono);font-size:19px;font-weight:500}
+    .stat-s{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+    .warning-box,.info-box,.soft-box,.blue-box{border-radius:var(--r);padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.8;border-left:3px solid}
+    .warning-box{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+    .info-box{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+    .soft-box{background:var(--accent-bg);border-color:var(--accent);color:var(--accent2)}
+    .blue-box{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
+    .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mini-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow)}
+    .mini-k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+    .mini-v{font-family:var(--mono);font-size:18px;color:var(--text)}
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);box-shadow:var(--shadow);overflow:hidden}
+    .pricing-table{width:100%;border-collapse:collapse}
+    .pricing-table th,.pricing-table td{padding:14px 18px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+    .pricing-table tr:last-child td{border-bottom:none}
+    .pricing-table th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+    .pricing-table td{font-size:14px}
+    .timeline-grid,.scenario-grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .timeline-card,.scenario-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+    .timeline-top,.scenario-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+    .timeline-name,.scenario-name{font-family:var(--serif);font-size:18px}
+    .timeline-price,.scenario-price{font-family:var(--mono);font-size:18px;color:var(--accent)}
+    .timeline-desc,.scenario-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:4px}
+    .chart-wrap{padding-top:4px}
+    .bar-track{height:40px;border-radius:8px;overflow:hidden;display:flex;background:var(--bg2);border:1px solid var(--border);margin-bottom:12px}
+    .bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;white-space:nowrap;overflow:hidden;transition:width .35s ease;color:#fff}
+    .chart-legend{display:flex;flex-wrap:wrap;gap:10px}
+    .legend-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+    .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+    /* PRO */
+    .chart-container{position:relative;height:260px;width:100%}
+    .ai-wrap{border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+    .ai-hdr{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--bg2);border-bottom:1px solid var(--border)}
+    .ai-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .ai-title{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text);flex:1}
+    .ai-body{padding:18px;font-size:14px;line-height:1.75;color:var(--text);min-height:80px}
+    .ai-body p{margin-bottom:.75rem}
+    .ai-body p:last-child{margin-bottom:0}
+    .ai-loading{display:flex;align-items:center;gap:8px;color:var(--muted);font-family:var(--mono);font-size:12px}
+    .ai-spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .ai-actions{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+    .ai-btn{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:7px 12px;border-radius:7px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;transition:all .15s}
+    .ai-btn:hover{background:var(--accent);color:#fff}
+    .ai-btn:disabled{opacity:.4;cursor:not-allowed}
+    .tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;gap:0}
+    .tab-btn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:10px 16px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;margin-bottom:-1px;white-space:nowrap}
+    .tab-btn:hover{color:var(--accent)}
+    .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    .sb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media(max-width:760px){.sb-grid{grid-template-columns:1fr}}
+    .sb-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .sb-title{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+    .sb-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+    .sb-field label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    .sb-field input{font-family:var(--mono);font-size:14px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--text);outline:none;width:100%}
+    .sb-field input:focus{border-color:var(--accent)}
+    .sb-result{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+    .sb-mrr{font-family:var(--mono);font-size:22px}
+    .sb-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px}
+    .sens-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+    .sens-table th{padding:8px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-weight:500;text-align:center}
+    .sens-table td{padding:7px 10px;border:1px solid var(--border);text-align:center}
+    .sens-table .rhdr{background:var(--bg3);color:var(--muted);text-align:left}
+    .cbad{background:var(--red-bg);color:var(--red)}.cok{background:var(--amber-bg);color:var(--amber)}.cgood{background:var(--green-bg);color:var(--green)}
+    .cohort-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
+    .cohort-table th{padding:7px 10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-weight:500;text-align:center}
+    .cohort-table td{padding:6px 10px;border:1px solid var(--border);text-align:center}
+    .cohort-table .clbl{text-align:left;background:var(--bg2);color:var(--muted)}
+    .payback-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+    @media(max-width:640px){.payback-grid{grid-template-columns:1fr}}
+    .payback-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .pb-label{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .pb-val{font-family:var(--mono);font-size:24px}
+    .pb-sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}
+    .gm-row{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:14px}
+    .gm-row input{font-family:var(--mono);font-size:14px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;width:70px;color:var(--text);outline:none}
+    .tier-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:760px){.tier-grid{grid-template-columns:1fr 1fr}}
+    .tier-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+    .tier-name{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .tier-row{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px}
+    .tier-row input{font-family:var(--mono);font-size:14px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;width:76px;color:var(--text);outline:none}
+    .tier-mrr{font-family:var(--mono);font-size:15px;color:var(--accent);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    .tier-summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-top:14px;font-family:var(--mono);font-size:13px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap}
+    .tier-summary span{color:var(--text)}
+    .divider{height:1px;background:var(--border);margin:3rem 0}
+    .tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:1rem}
+    .tip-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+    .tip-num{font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:6px}
+    .tip-title{font-family:var(--serif);font-size:15px;font-weight:400;margin-bottom:6px}
+    .tip-body{font-size:13px;color:var(--muted);font-family:var(--serif);line-height:1.6}
+    footer{margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em;line-height:2}
+    .small-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;line-height:1.7}
+    @media print{nav,.theme-btn,.mini-btn,.mode-row,.toggle-row{display:none!important}body{background:#fff;color:#000}.wrap{max-width:none;padding:0}.results{position:static}.panel,.big-card,.stat,.timeline-card,.scenario-card,.tip-card,.mini-card{box-shadow:none}.divider{margin:1.5rem 0}}
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="#" onclick="return false;"><span>Kat</span>Tools <span class="pro-badge">Pro</span></a>
+    <div class="nav-right">
+      <a class="nav-link" href="#calculator">Calculator</a>
+      <a class="nav-link" href="#timeline">Timeline</a>
+      <a class="nav-link" href="#pro-tools">Growth Lab</a>
+      <a class="nav-link" href="#tips">Tips</a>
+      <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
+      <button class="theme-btn" onclick="window.print()">Save / Print</button>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">Dark mode</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero-eyebrow">Founder mode · Pro Edition</div>
+      <h1>The SaaS<br><em>Growth</em> Simulator</h1>
+      <p class="hero-sub">Model users, churn, pricing, costs, and growth — with scenario stress tests, cohort modeling, payback analysis, and a sensitivity matrix built for serious founders.</p>
+      <div class="hero-bar">
+        <span class="hero-bar-label">Billing price</span>
+        <div class="money-input-wrap">
+          <span class="money-prefix">$</span>
+          <input id="priceTop" class="money-input" type="text" value="20" oninput="syncTopPrice(this)" onblur="formatMoneyInput(this)">
+        </div>
+        <div class="toggle-row" id="billingPeriodRow"></div>
+      </div>
+    </header>
+
+    <section id="calculator">
+      <div class="section-head">
+        <span class="section-title">Build your SaaS model</span>
+        <span class="section-sub">pricing + users + churn + costs</span>
+      </div>
+      <div class="main-grid">
+        <div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">SaaS presets</span></div>
+            <div class="preset-grid" id="presetGrid"></div>
+            <div class="small-note">These presets auto-adjust billing period, price, starting users, growth, churn, and monthly costs.</div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">Core inputs</span></div>
+            <div class="form-grid">
+              <div class="field"><label for="price">Billing price</label><div class="inline-money"><span>$</span><input id="price" type="text" value="20" oninput="syncTopPrice(this)" onblur="formatMoneyInput(this)"></div></div>
+              <div class="field"><label>Billing period</label><div class="toggle-row" id="billingPeriodRowBottom"></div></div>
+              <div class="field"><label for="startingUsers">Starting users</label><input id="startingUsers" class="input mono" type="number" min="0" value="25" oninput="update()"></div>
+              <div class="field"><label for="newUsers">New users per month</label><input id="newUsers" class="input mono" type="number" min="0" value="20" oninput="update()"></div>
+              <div class="field"><label for="churn">Monthly churn %</label><input id="churn" class="input mono" type="number" min="0" max="100" step="0.1" value="6" oninput="update()"></div>
+              <div class="field"><label for="monthlyCosts">Monthly operating costs</label><div class="inline-money"><span>$</span><input id="monthlyCosts" type="text" value="1,200" oninput="update()" onblur="formatMoneyInput(this)"></div></div>
+              <div class="field"><label for="cac">Customer acquisition cost (CAC)</label><div class="inline-money"><span>$</span><input id="cac" type="text" value="15" oninput="update()" onblur="formatMoneyInput(this)"></div></div>
+              <div class="field"><label for="targetMRR">Target MRR</label><div class="inline-money"><span>$</span><input id="targetMRR" type="text" value="10,000" oninput="update()" onblur="formatMoneyInput(this)"></div></div>
+              <div class="field"><label for="projectionMonths">Projection window</label>
+                <select id="projectionMonths" class="select" onchange="update()">
+                  <option value="6">6 months</option><option value="12" selected>12 months</option><option value="18">18 months</option><option value="24">24 months</option>
+                </select>
+              </div>
+            </div>
+            <div class="small-note" id="billingNote"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">Model breakdown</span><button class="mini-btn" onclick="resetDefaults()">Reset</button></div>
+            <div class="table-card" style="box-shadow:none;border:none;background:transparent;">
+              <table class="pricing-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody id="breakdownRows"></tbody></table>
+            </div>
+          </div>
+          <div class="panel" id="timeline">
+            <div class="panel-hdr"><span class="panel-label">Growth timeline</span></div>
+            <div class="timeline-grid" id="timelineGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">Revenue mix preview</span></div>
+            <div class="chart-wrap"><div class="bar-track" id="revenueBar"></div><div class="chart-legend" id="revenueLegend"></div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr">
+              <span class="panel-label">Growth chart <span class="pro-badge">Pro</span></span>
+              <div style="display:flex;gap:6px" id="chartToggleRow">
+                <button class="period-btn active" onclick="setChartView('mrr',this)">MRR</button>
+                <button class="period-btn" onclick="setChartView('users',this)">Users</button>
+                <button class="period-btn" onclick="setChartView('profit',this)">Profit</button>
+              </div>
+            </div>
+            <div class="chart-container"><canvas id="growthChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="results">
+          <div class="big-card">
+            <div class="panel-label" style="margin-bottom:10px">Result mode</div>
+            <div class="mode-row" id="modeRow"></div>
+            <div class="big-label" id="resultLabel">Current MRR</div>
+            <div class="big-val" id="headlineValue">$0</div>
+            <div class="big-sub" id="headlineSub"></div>
+          </div>
+          <div class="stat-grid" id="statGrid"></div>
+          <div id="biggestProblemBox"></div>
+          <div id="goalBox"></div>
+          <div id="profitabilityBox"></div>
+          <div id="billingInsightBox"></div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">Break-even &amp; milestones</span></div>
+            <div class="mini-grid" id="milestoneGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">User economics</span></div>
+            <div class="mini-grid" id="economicsGrid"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-hdr"><span class="panel-label">Scenario comparison</span></div>
+            <div class="scenario-grid" id="scenarioGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section id="pro-tools">
+      <div class="section-head">
+        <span class="section-title">Growth Lab <span class="pro-badge">Pro</span></span>
+        <span class="section-sub">scenario builder · sensitivity · cohorts · CAC payback · pricing tiers</span>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('scenarios',this)">Scenario Builder</button>
+        <button class="tab-btn" onclick="switchTab('sensitivity',this)">Sensitivity Matrix</button>
+        <button class="tab-btn" onclick="switchTab('cohorts',this)">Cohort Analysis</button>
+        <button class="tab-btn" onclick="switchTab('cacpayback',this)">CAC Payback</button>
+        <button class="tab-btn" onclick="switchTab('tiers',this)">Pricing Tiers</button>
+      </div>
+      <div class="tab-pane active" id="tab-scenarios">
+        <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">Edit each scenario and compare projected MRR side by side. Base is pulled from your current inputs.</p>
+        <div class="sb-grid" id="scenarioBuilderGrid"></div>
+      </div>
+      <div class="tab-pane" id="tab-sensitivity">
+        <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">Final MRR across combinations of monthly price and churn. Green = above break-even, red = below.</p>
+        <div style="overflow-x:auto"><table class="sens-table" id="sensitivityTable"></table></div>
+      </div>
+      <div class="tab-pane" id="tab-cohorts">
+        <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">Each row = a monthly cohort of new users. Columns show surviving users after N months at your churn rate.</p>
+        <div style="overflow-x:auto"><table class="cohort-table" id="cohortTable"></table></div>
+      </div>
+      <div class="tab-pane" id="tab-cacpayback">
+        <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">How long does it take to recover what you spend to acquire each user?</p>
+        <div class="gm-row"><span>Gross margin</span><input type="number" id="grossMargin" value="80" min="1" max="100" oninput="renderPayback()"><span>%</span></div>
+        <div class="payback-grid" id="paybackGrid"></div>
+        <div id="paybackInsight"></div>
+      </div>
+      <div class="tab-pane" id="tab-tiers">
+        <p style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:16px">Model up to 4 pricing tiers. Set price and estimated users per tier to see blended MRR and ARPU.</p>
+        <div class="tier-grid" id="tierGrid"></div>
+        <div class="tier-summary">Blended MRR: <span id="blendedMRR">$0</span>&nbsp;&nbsp;·&nbsp;&nbsp;Blended ARPU: <span id="blendedARPU">$0</span>&nbsp;&nbsp;·&nbsp;&nbsp;Total users: <span id="tierTotalUsers">0</span></div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <section id="tips">
+      <div class="section-head"><span class="section-title">SaaS reminders</span></div>
+      <div class="tips-grid">
+        <div class="tip-card"><div class="tip-num">01</div><div class="tip-title">Churn kills quietly</div><div class="tip-body">You can add users every month and still stall if churn keeps erasing your growth.</div></div>
+        <div class="tip-card"><div class="tip-num">02</div><div class="tip-title">Price is leverage</div><div class="tip-body">A small increase in price can move MRR faster than chasing the same number of extra users.</div></div>
+        <div class="tip-card"><div class="tip-num">03</div><div class="tip-title">LTV must beat CAC</div><div class="tip-body">If your customer is not worth much more than the cost to acquire them, scale gets dangerous fast.</div></div>
+        <div class="tip-card"><div class="tip-num">04</div><div class="tip-title">Costs matter early</div><div class="tip-body">A tiny product can still fail if infrastructure, tools, and paid growth outpace the revenue base.</div></div>
+        <div class="tip-card"><div class="tip-num">05</div><div class="tip-title">CAC payback window</div><div class="tip-body">If it takes 18+ months to recover your acquisition cost, you need lower CAC or higher price before scaling.</div></div>
+        <div class="tip-card"><div class="tip-num">06</div><div class="tip-title">Cohort retention compounds</div><div class="tip-body">Even 2% less monthly churn dramatically improves how much revenue a cohort generates over its lifetime.</div></div>
+        <div class="tip-card"><div class="tip-num">07</div><div class="tip-title">Pricing tiers spread risk</div><div class="tip-body">A blended model can grow total users while protecting ARPU. Model each tier before combining them.</div></div>
+        <div class="tip-card"><div class="tip-num">08</div><div class="tip-title">Sensitivity before scaling</div><div class="tip-body">Before spending on growth, test your model across price and churn combinations. Small changes flip unit economics entirely.</div></div>
+      </div>
+    </section>
+
+    <footer>
+      <div>SaaS Growth Simulator Pro · Built to test whether your product can really scale.</div>
+      <div style="margin-top:.5rem">Scenario builder · Cohort modeling · CAC payback · Sensitivity matrix · CSV export</div>
+    </footer>
+  </div>
+
+  <script>
+    // ── THEME ────────────────────────────────────────────────
+    function toggleTheme(){
+      var html=document.documentElement,dark=html.dataset.theme!=='dark';
+      html.dataset.theme=dark?'dark':'light';
+      document.getElementById('themeBtn').textContent=dark?'Light mode':'Dark mode';
+      localStorage.setItem('kc-theme',html.dataset.theme);
+      if(growthChart)updateChart();
+    }
+    (function(){var s=localStorage.getItem('kc-theme');if(s){document.documentElement.dataset.theme=s;document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('themeBtn');if(b)b.textContent=s==='dark'?'Light mode':'Dark mode';})}})();
+
+    // ── DATA ─────────────────────────────────────────────────
+    var PRESETS=[
+      {id:'micro',      icon:'🧩',name:'Micro SaaS',    desc:'Lean solo tool',               bp:'month',price:12, su:20, nu:10, ch:5,  co:350,  cac:8},
+      {id:'startup',    icon:'🚀',name:'Startup Push',  desc:'Actively growing app',         bp:'month',price:20, su:25, nu:20, ch:6,  co:1200, cac:15},
+      {id:'b2b',        icon:'🏢',name:'B2B SaaS',      desc:'Higher price, lower volume',   bp:'month',price:79, su:10, nu:6,  ch:3,  co:2500, cac:60},
+      {id:'consumer',   icon:'📱',name:'Consumer App',  desc:'Lower price, faster churn',    bp:'month',price:9,  su:100,nu:80, ch:9,  co:1800, cac:6},
+      {id:'weekly-tool',icon:'⏱️',name:'Weekly Tool',   desc:'Low-ticket fast recurring',    bp:'week', price:5,  su:80, nu:35, ch:11, co:700,  cac:5},
+      {id:'annual-b2b', icon:'📦',name:'Annual B2B',    desc:'Yearly contracts, lower churn',bp:'year', price:600,su:12, nu:4,  ch:1.5,co:3200, cac:120},
+      {id:'ai-tool',    icon:'🤖',name:'AI Tool',       desc:'Higher infra, strong pricing', bp:'month',price:29, su:35, nu:30, ch:7,  co:2600, cac:22}
+    ];
+    var MODES=[{id:'mrr',label:'MRR'},{id:'users',label:'Users'},{id:'breakeven',label:'Break-even'},{id:'ltv',label:'LTV'}];
+    var BPS=[{id:'week',label:'Week',tm:4.3333},{id:'month',label:'Month',tm:1},{id:'year',label:'Year',tm:1/12}];
+    var activePreset=PRESETS[1],activeMode='mrr',activeBP='month';
+
+    // ── RENDER HELPERS ───────────────────────────────────────
+    function renderPresets(){
+      document.getElementById('presetGrid').innerHTML=PRESETS.map(function(p){
+        return '<div class="preset-card'+(p.id===activePreset.id?' active':'')+'" onclick="pickPreset(\''+p.id+'\')"><span class="pc-icon">'+p.icon+'</span><div class="pc-name">'+p.name+'</div><div class="pc-desc">'+p.desc+'</div></div>';
+      }).join('');
+    }
+    function renderModes(){
+      document.getElementById('modeRow').innerHTML=MODES.map(function(m){
+        return '<button class="mode-btn'+(m.id===activeMode?' active':'')+'" onclick="setMode(\''+m.id+'\')">'+m.label+'</button>';
+      }).join('');
+    }
+    function renderBPs(){
+      var btns=BPS.map(function(p){return '<button class="period-btn'+(p.id===activeBP?' active':'')+'" onclick="setBP(\''+p.id+'\')">'+p.label+'</button>';}).join('');
+      document.getElementById('billingPeriodRow').innerHTML=btns;
+      document.getElementById('billingPeriodRowBottom').innerHTML=btns;
+    }
+    function setMode(id){activeMode=id;renderModes();update();}
+    function setBP(id){activeBP=id;renderBPs();update();}
+    function pickPreset(id){
+      activePreset=PRESETS.filter(function(p){return p.id===id;})[0]||PRESETS[1];
+      activeBP=activePreset.bp;
+      document.getElementById('price').value=activePreset.price.toLocaleString();
+      document.getElementById('priceTop').value=activePreset.price.toLocaleString();
+      document.getElementById('startingUsers').value=activePreset.su;
+      document.getElementById('newUsers').value=activePreset.nu;
+      document.getElementById('churn').value=activePreset.ch;
+      document.getElementById('monthlyCosts').value=activePreset.co.toLocaleString();
+      document.getElementById('cac').value=activePreset.cac.toLocaleString();
+      renderPresets();renderBPs();update();
+    }
+
+    // ── UTILS ────────────────────────────────────────────────
+    function parseMoney(s){return parseInt(String(s).replace(/[^0-9]/g,''))||0;}
+    function formatMoneyInput(el){el.value=parseMoney(el.value).toLocaleString();}
+    function syncTopPrice(el){var n=parseMoney(el.value);document.getElementById('price').value=n.toLocaleString();document.getElementById('priceTop').value=n.toLocaleString();update();}
+    function fm(n){return '$'+Math.round(n).toLocaleString();}
+    function fp(n){return(Math.round(n*10)/10)+'%';}
+    function getBPMeta(){return BPS.filter(function(p){return p.id===activeBP;})[0]||BPS[1];}
+    function mep(price){return price*getBPMeta().tm;}
+    function resetDefaults(){activePreset=PRESETS[1];activeMode='mrr';renderPresets();renderModes();pickPreset(activePreset.id);document.getElementById('targetMRR').value='10,000';document.getElementById('projectionMonths').value='12';update();}
+
+    function simulate(su,nu,ch,price,months,costs){
+      var users=su,rows=[];
+      for(var m=1;m<=months;m++){
+        var churned=users*ch,end=Math.max(0,users-churned+nu),mrr=end*price,profit=mrr-costs;
+        rows.push({month:m,startUsers:users,churned:churned,newUsers:nu,endUsers:end,mrr:mrr,profit:profit});
+        users=end;
+      }
+      return rows;
+    }
+    function firstWhere(rows,fn){var f=rows.filter(fn)[0];return f?f.month:null;}
+
+    // ── MAIN UPDATE ──────────────────────────────────────────
+    function update(){
+      var price=parseMoney(document.getElementById('price').value);
+      var su=+document.getElementById('startingUsers').value||0;
+      var nu=+document.getElementById('newUsers').value||0;
+      var ch=(+document.getElementById('churn').value||0)/100;
+      var costs=parseMoney(document.getElementById('monthlyCosts').value);
+      var cac=parseMoney(document.getElementById('cac').value);
+      var targetMRR=parseMoney(document.getElementById('targetMRR').value);
+      var months=+document.getElementById('projectionMonths').value||12;
+      var mp=mep(price);
+      var curMRR=su*mp,curProfit=curMRR-costs,churnedNow=su*ch;
+      var ltv=ch>0?mp/ch:Infinity,ltvL=isFinite(ltv)?fm(ltv):'∞';
+      var ltvCac=cac>0&&isFinite(ltv)?ltv/cac:Infinity,ltvCacL=isFinite(ltvCac)?(Math.round(ltvCac*10)/10)+'x':'∞';
+      var beu=mp>0?Math.ceil(costs/mp):Infinity,beMRR=beu===Infinity?Infinity:beu*mp;
+      var rows=simulate(su,nu,ch,mp,months,costs);
+      var fin=rows[rows.length-1]||{endUsers:su,mrr:curMRR,profit:curProfit};
+      var mBE=firstWhere(rows,function(r){return r.mrr>=costs;});
+      var mTgt=firstWhere(rows,function(r){return r.mrr>=targetMRR;});
+      var m1=rows[0]||fin,m12=rows[Math.min(11,rows.length-1)]||fin;
+
+      var rLabel='Current MRR',rVal=fm(curMRR),rSub=su+' users · '+fm(price)+'/'+activeBP+' · '+fm(curProfit)+' monthly profit';
+      if(activeMode==='users'){rLabel='Projected users';rVal=Math.round(fin.endUsers).toLocaleString();rSub='after '+months+' months · start '+su+' · add '+nu+'/month';}
+      else if(activeMode==='breakeven'){rLabel='Break-even users';rVal=beu===Infinity?'∞':beu.toLocaleString();rSub=(beMRR===Infinity?'∞':fm(beMRR))+' in monthly revenue needed to cover costs';}
+      else if(activeMode==='ltv'){rLabel='Lifetime value';rVal=ltvL;rSub='LTV/CAC '+ltvCacL+' · churn '+fp(ch*100)+' · normalized to monthly';}
+      document.getElementById('resultLabel').textContent=rLabel;
+      document.getElementById('headlineValue').textContent=rVal;
+      document.getElementById('headlineSub').textContent=rSub;
+      document.getElementById('billingNote').textContent='Selected billing period: '+activeBP+'. Projections normalized to monthly. '+fm(price)+'/'+activeBP+' = '+fm(mp)+'/month equivalent.';
+
+      document.getElementById('statGrid').innerHTML=[
+        {l:'Current MRR',v:fm(curMRR),s:'monthly normalized revenue',c:'var(--accent)'},
+        {l:'Month '+months+' MRR',v:fm(fin.mrr),s:'projected end of window',c:'var(--blue)'},
+        {l:'Monthly profit',v:fm(curProfit),s:'after monthly costs',c:curProfit>=0?'var(--green)':'var(--red)'},
+        {l:'Churned users now',v:Math.round(churnedNow*10)/10,s:'lost per month at current base',c:'var(--amber)'},
+        {l:'LTV / CAC',v:ltvCacL,s:'user economics health',c:isFinite(ltvCac)&&ltvCac>=3?'var(--green)':'var(--amber)'}
+      ].map(function(s){return '<div class="stat"><div class="stat-l">'+s.l+'</div><div class="stat-v" style="color:'+s.c+'">'+s.v+'</div><div class="stat-s">'+s.s+'</div></div>';}).join('');
+
+      document.getElementById('biggestProblemBox').innerHTML=ch>=0.08?
+        '<div class="blue-box">Biggest problem: churn is high. Even if you keep adding users, too much of your growth is leaking out every month.</div>':
+        mp<=10&&costs>=1000?'<div class="blue-box">Biggest problem: your effective monthly price is probably too low for your cost base. You may need stronger pricing before chasing scale.</div>':
+        nu<=churnedNow?'<div class="blue-box">Biggest problem: you are not adding users fast enough to outgrow churn. Your growth engine is too weak right now.</div>':
+        '<div class="blue-box">Biggest lever: your model is viable on paper. The next big gains likely come from reducing churn a little or raising price slightly.</div>';
+
+      document.getElementById('goalBox').innerHTML=mTgt?
+        '<div class="info-box">'+fm(targetMRR)+' MRR target: reachable in month '+mTgt+' at your current setup.</div>':
+        '<div class="warning-box">'+fm(targetMRR)+' MRR target: not reached within '+months+' months at your current setup.</div>';
+
+      document.getElementById('profitabilityBox').innerHTML=curProfit>=0?
+        '<div class="info-box">You are already above break-even. Focus on protecting churn and improving LTV.</div>':
+        mBE?'<div class="soft-box">Not profitable yet, but this model crosses break-even in month '+mBE+' if growth holds.</div>':
+        '<div class="warning-box">This setup does not break even within the current projection window. Reduce costs, increase price, or grow faster.</div>';
+
+      document.getElementById('billingInsightBox').innerHTML=activeBP==='week'?
+        '<div class="soft-box">Weekly billing can boost short-term cash flow, but often comes with higher churn sensitivity and billing fatigue.</div>':
+        activeBP==='year'?'<div class="info-box">Yearly billing improves upfront cash collection and retention, but requires stronger trust and acquisition effort.</div>':
+        '<div class="soft-box">Monthly billing is the cleanest default for modeling recurring SaaS revenue. Easiest to compare against costs and churn.</div>';
+
+      document.getElementById('milestoneGrid').innerHTML=
+        '<div class="mini-card"><div class="mini-k">Break-even users</div><div class="mini-v">'+(beu===Infinity?'∞':beu.toLocaleString())+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">Break-even month</div><div class="mini-v">'+(mBE||'—')+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">'+fm(1000)+' MRR</div><div class="mini-v">'+(firstWhere(rows,function(r){return r.mrr>=1000;})||'—')+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">'+fm(10000)+' MRR</div><div class="mini-v">'+(firstWhere(rows,function(r){return r.mrr>=10000;})||'—')+'</div></div>';
+
+      document.getElementById('economicsGrid').innerHTML=
+        '<div class="mini-card"><div class="mini-k">LTV</div><div class="mini-v">'+ltvL+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">CAC</div><div class="mini-v">'+fm(cac)+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">LTV / CAC</div><div class="mini-v">'+ltvCacL+'</div></div>'+
+        '<div class="mini-card"><div class="mini-k">Final month MRR</div><div class="mini-v">'+fm(fin.mrr)+'</div></div>';
+
+      var r2=simulate(su,nu,Math.max(0,ch-0.02),mp,months,costs);
+      var f2=r2[r2.length-1]||fin;
+      document.getElementById('scenarioGrid').innerHTML=[
+        {name:'Current setup',price:fin.mrr,desc:'Projected MRR after '+months+' months'},
+        {name:'Raise price 20%',price:fin.endUsers*Math.round(mp*1.2),desc:'Same users, stronger monetization'},
+        {name:'Reduce churn 2%',price:f2.mrr,desc:'Same price, healthier retention'}
+      ].map(function(s){return '<div class="scenario-card"><div class="scenario-top"><div class="scenario-name">'+s.name+'</div><div class="scenario-price">'+fm(s.price)+'</div></div><div class="scenario-desc">'+s.desc+'</div></div>';}).join('');
+
+      document.getElementById('breakdownRows').innerHTML=[
+        ['Preset',activePreset.name],['Billing period',activeBP],['Billing price',fm(price)+' / '+activeBP],
+        ['Monthly equivalent',fm(mp)],['Starting users',su.toLocaleString()],['New users / month',nu.toLocaleString()],
+        ['Monthly churn',fp(ch*100)],['Monthly costs',fm(costs)],['Current MRR',fm(curMRR)],
+        ['Current profit',fm(curProfit)],['Break-even users',beu===Infinity?'∞':beu.toLocaleString()],
+        ['LTV',ltvL],['CAC',fm(cac)],['LTV / CAC',ltvCacL]
+      ].map(function(r){return '<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+'</td></tr>';}).join('');
+
+      var pts=[m1,m12,fin].filter(function(v,i,a){return a.findIndex(function(x){return x.month===v.month;})=== i;});
+      document.getElementById('timelineGrid').innerHTML=pts.map(function(r){
+        return '<div class="timeline-card"><div class="timeline-top"><div class="timeline-name">Month '+r.month+'</div><div class="timeline-price">'+fm(r.mrr)+'</div></div><div class="timeline-desc">'+Math.round(r.endUsers).toLocaleString()+' users · '+fm(r.profit)+' monthly profit</div></div>';
+      }).join('');
+
+      var tot=Math.max(1,costs+Math.max(curProfit,0)+Math.max(mp*su*ch,0));
+      var cp=(costs/tot)*100,pp=(Math.max(curProfit,0)/tot)*100,cv=mp*su*ch,cvp=(Math.max(cv,0)/tot)*100;
+      document.getElementById('revenueBar').innerHTML=
+        '<div class="bar-seg" style="width:'+cp+'%;background:var(--red)">'+(cp>12?'Costs':'')+'</div>'+
+        '<div class="bar-seg" style="width:'+cvp+'%;background:var(--amber)">'+(cvp>12?'Churn drag':'')+'</div>'+
+        '<div class="bar-seg" style="width:'+pp+'%;background:var(--green)">'+(pp>12?'Profit':'')+'</div>';
+      document.getElementById('revenueLegend').innerHTML=
+        '<div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Monthly costs — '+fm(costs)+'</div>'+
+        '<div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Revenue drag from churn — '+fm(cv)+'</div>'+
+        '<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Current profit — '+fm(Math.max(curProfit,0))+'</div>';
+
+      updateChart();
+      refreshActiveTab();
+    }
+
+    // ── CHART ────────────────────────────────────────────────
+    var growthChart=null,chartView='mrr';
+    function setChartView(v,btn){
+      chartView=v;
+      document.querySelectorAll('#chartToggleRow .period-btn').forEach(function(b){b.classList.remove('active');});
+      btn.classList.add('active');
+      updateChart();
+    }
+    function updateChart(){
+      var price=parseMoney(document.getElementById('price').value);
+      var su=+document.getElementById('startingUsers').value||0;
+      var nu=+document.getElementById('newUsers').value||0;
+      var ch=(+document.getElementById('churn').value||0)/100;
+      var costs=parseMoney(document.getElementById('monthlyCosts').value);
+      var months=+document.getElementById('projectionMonths').value||12;
+      var mp=mep(price);
+      var rows=simulate(su,nu,ch,mp,months,costs);
+      var isDark=document.documentElement.dataset.theme==='dark';
+      var labels=rows.map(function(r){return 'M'+r.month;});
+      var data,color;
+      if(chartView==='mrr'){data=rows.map(function(r){return Math.round(r.mrr);});color='#b85c2a';}
+      else if(chartView==='users'){data=rows.map(function(r){return Math.round(r.endUsers);});color='#466b94';}
+      else{data=rows.map(function(r){return Math.round(r.profit);});color='#2e7d52';}
+      var gc=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+      var tc=isDark?'#8a8070':'#7a7268';
+      if(growthChart)growthChart.destroy();
+      var ctx=document.getElementById('growthChart').getContext('2d');
+      growthChart=new Chart(ctx,{
+        type:'line',
+        data:{labels:labels,datasets:[{data:data,borderColor:color,backgroundColor:color+'20',borderWidth:2,pointRadius:rows.length<=12?4:2,pointBackgroundColor:color,fill:true,tension:0.35}]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#241f19':'#fff',borderColor:isDark?'#332d25':'#ddd8ce',borderWidth:1,titleColor:tc,bodyColor:color,titleFont:{family:"'IBM Plex Mono',monospace",size:11},bodyFont:{family:"'IBM Plex Mono',monospace",size:13},callbacks:{label:function(c){return chartView==='users'?c.parsed.y.toLocaleString()+' users':'$'+c.parsed.y.toLocaleString();}}}},
+          scales:{x:{grid:{color:gc},ticks:{color:tc,font:{family:"'IBM Plex Mono',monospace",size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{family:"'IBM Plex Mono',monospace",size:10},callback:function(v){return chartView==='users'?v.toLocaleString():'$'+v.toLocaleString();}}}}
+        }
+      });
+    }
+
+    // ── TABS ─────────────────────────────────────────────────
+    function switchTab(name,btn){
+      document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+      document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+      btn.classList.add('active');
+      document.getElementById('tab-'+name).classList.add('active');
+      renderTab(name);
+    }
+    function refreshActiveTab(){
+      var a=document.querySelector('.tab-pane.active');
+      if(a)renderTab(a.id.replace('tab-',''));
+    }
+    function renderTab(n){
+      if(n==='scenarios')renderScenarios();
+      if(n==='sensitivity')renderSensitivity();
+      if(n==='cohorts')renderCohorts();
+      if(n==='cacpayback')renderPayback();
+      if(n==='tiers')renderTiers();
+    }
+
+    // ── SCENARIO BUILDER ────────────────────────────────────
+    function renderScenarios(){
+      var mp=mep(parseMoney(document.getElementById('price').value));
+      var su=+document.getElementById('startingUsers').value||0;
+      var nu=+document.getElementById('newUsers').value||0;
+      var ch=+document.getElementById('churn').value||0;
+      var co=parseMoney(document.getElementById('monthlyCosts').value);
+      var defs=[
+        {label:'Base',color:'var(--muted)',price:mp,nu:nu,ch:ch,co:co},
+        {label:'Optimistic',color:'var(--green)',price:Math.round(mp*1.2),nu:Math.round(nu*1.3),ch:Math.max(.5,ch-1),co:co},
+        {label:'Pessimistic',color:'var(--red)',price:mp,nu:Math.round(nu*.7),ch:ch+2,co:co}
+      ];
+      document.getElementById('scenarioBuilderGrid').innerHTML=defs.map(function(d,i){
+        return '<div class="sb-col">'+
+          '<div class="sb-title" style="color:'+d.color+'">'+d.label+'</div>'+
+          '<div class="sb-field"><label>Price/mo ($)</label><input type="number" id="scp'+i+'" value="'+Math.round(d.price)+'" oninput="calcSB()"></div>'+
+          '<div class="sb-field"><label>New users/mo</label><input type="number" id="scn'+i+'" value="'+d.nu+'" oninput="calcSB()"></div>'+
+          '<div class="sb-field"><label>Churn (%)</label><input type="number" id="scc'+i+'" value="'+d.ch+'" step="0.1" oninput="calcSB()"></div>'+
+          '<div class="sb-field"><label>Costs ($)</label><input type="number" id="sck'+i+'" value="'+d.co+'" oninput="calcSB()"></div>'+
+          '<div class="sb-result" id="scr'+i+'"></div>'+
+          '</div>';
+      }).join('');
+      calcSB();
+    }
+    function calcSB(){
+      var su=+document.getElementById('startingUsers').value||0;
+      var mo=+document.getElementById('projectionMonths').value||12;
+      var colors=['var(--muted)','var(--green)','var(--red)'];
+      [0,1,2].forEach(function(i){
+        var p=+document.getElementById('scp'+i).value||0;
+        var n=+document.getElementById('scn'+i).value||0;
+        var c=(+document.getElementById('scc'+i).value||0)/100;
+        var k=+document.getElementById('sck'+i).value||0;
+        var rows=simulate(su,n,c,p,mo,k),fin=rows[rows.length-1];
+        document.getElementById('scr'+i).innerHTML=
+          '<div class="sb-mrr" style="color:'+colors[i]+'">'+fm(fin.mrr)+'</div>'+
+          '<div class="sb-sub">MRR after '+mo+' months</div>'+
+          '<div class="sb-sub">'+Math.round(fin.endUsers).toLocaleString()+' users · '+fm(fin.profit)+'/mo profit</div>';
+      });
+    }
+
+    // ── SENSITIVITY ──────────────────────────────────────────
+    function renderSensitivity(){
+      var baseMEP=mep(parseMoney(document.getElementById('price').value));
+      var su=+document.getElementById('startingUsers').value||0;
+      var nu=+document.getElementById('newUsers').value||0;
+      var costs=parseMoney(document.getElementById('monthlyCosts').value);
+      var mo=+document.getElementById('projectionMonths').value||12;
+      var bc=+document.getElementById('churn').value||5;
+      var prices=[.6,.8,1,1.2,1.5].map(function(m){return Math.round(baseMEP*m);});
+      var churns=[-4,-2,0,2,4].map(function(d){return Math.max(.5,bc+d);});
+      var html='<thead><tr><th>Price / Churn</th>';
+      churns.forEach(function(c){html+='<th>'+c.toFixed(1)+'% churn</th>';});
+      html+='</tr></thead><tbody>';
+      prices.forEach(function(p){
+        html+='<tr><td class="rhdr">$'+p+'/mo</td>';
+        churns.forEach(function(c){
+          var rows=simulate(su,nu,c/100,p,mo,costs),mrr=Math.round(rows[rows.length-1].mrr);
+          var cls=mrr>=costs*3?'cgood':mrr>=costs?'cok':'cbad';
+          html+='<td class="'+cls+'">'+fm(mrr)+'</td>';
+        });
+        html+='</tr>';
+      });
+      html+='</tbody>';
+      document.getElementById('sensitivityTable').innerHTML=html;
+    }
+
+    // ── COHORTS ──────────────────────────────────────────────
+    function renderCohorts(){
+      var ch=(+document.getElementById('churn').value||0)/100;
+      var nu=+document.getElementById('newUsers').value||0;
+      var N=12;
+      var html='<thead><tr><th>Cohort</th>';
+      for(var m=0;m<=N;m++)html+='<th>M+'+m+'</th>';
+      html+='</tr></thead><tbody>';
+      for(var co=1;co<=6;co++){
+        html+='<tr><td class="clbl">Cohort '+co+' ('+nu+' users)</td>';
+        for(var m2=0;m2<=N;m2++){
+          var surv=Math.round(nu*Math.pow(1-ch,m2)),pct=Math.round((surv/Math.max(nu,1))*100);
+          var g=Math.round(150*(pct/100)),r=Math.round(200*(1-pct/100));
+          html+='<td style="background:rgba('+r+','+g+',40,0.18)">'+surv+'<br><span style="font-size:9px;color:var(--muted)">'+pct+'%</span></td>';
+        }
+        html+='</tr>';
+      }
+      html+='</tbody>';
+      document.getElementById('cohortTable').innerHTML=html;
+    }
+
+    // ── CAC PAYBACK ──────────────────────────────────────────
+    function renderPayback(){
+      var cac=parseMoney(document.getElementById('cac').value);
+      var mp=mep(parseMoney(document.getElementById('price').value));
+      var ch=(+document.getElementById('churn').value||0)/100;
+      var gm=(+document.getElementById('grossMargin').value||80)/100;
+      var mg=mp*gm,pb=mg>0?cac/mg:Infinity,al=ch>0?1/ch:Infinity,ltv=mg*(ch>0?1/ch:0),lc=cac>0?ltv/cac:0;
+      var pc=pb<=12?'var(--green)':pb<=18?'var(--amber)':'var(--red)';
+      document.getElementById('paybackGrid').innerHTML=
+        '<div class="payback-card"><div class="pb-label">CAC Payback Period</div><div class="pb-val" style="color:'+pc+'">'+(isFinite(pb)?pb.toFixed(1)+' mo':'∞')+'</div><div class="pb-sub">to recover '+fm(cac)+' CAC</div></div>'+
+        '<div class="payback-card"><div class="pb-label">Avg User Lifetime</div><div class="pb-val">'+(isFinite(al)?al.toFixed(1)+' mo':'∞')+'</div><div class="pb-sub">at '+(ch*100).toFixed(1)+'% monthly churn</div></div>'+
+        '<div class="payback-card"><div class="pb-label">LTV (gross margin)</div><div class="pb-val" style="color:var(--accent)">'+fm(ltv)+'</div><div class="pb-sub">LTV/CAC = '+lc.toFixed(1)+'x</div></div>';
+      var ins='';
+      if(!isFinite(pb)||pb>al)ins='<div class="warning-box">You never recover your CAC before the average user churns. Lower CAC, raise price, or reduce churn significantly.</div>';
+      else if(pb>18)ins='<div class="soft-box">Payback of '+pb.toFixed(1)+' months is long. Manageable for B2B but risky for consumer. Lower CAC or increase ARPU.</div>';
+      else if(pb>12)ins='<div class="soft-box">Payback of '+pb.toFixed(1)+' months is acceptable but leaves little room for error. Improving retention will compound returns.</div>';
+      else ins='<div class="info-box">Payback of '+pb.toFixed(1)+' months is healthy. With a '+lc.toFixed(1)+'x LTV/CAC ratio, you have room to invest more in growth.</div>';
+      document.getElementById('paybackInsight').innerHTML=ins;
+    }
+
+    // ── PRICING TIERS ────────────────────────────────────────
+    var TIER_DEFS=[{name:'Starter',price:9,users:50},{name:'Basic',price:19,users:30},{name:'Pro',price:49,users:15},{name:'Enterprise',price:149,users:5}];
+    function renderTiers(){
+      var grid=document.getElementById('tierGrid');
+      if(!grid.dataset.built){
+        grid.innerHTML=TIER_DEFS.map(function(t,i){
+          return '<div class="tier-card">'+
+            '<div class="tier-name">'+t.name+'</div>'+
+            '<div class="tier-row"><span>$</span><input type="number" id="tp'+i+'" value="'+t.price+'" oninput="calcTiers()"><span>/mo</span></div>'+
+            '<div class="tier-row"><input type="number" id="tu'+i+'" value="'+t.users+'" oninput="calcTiers()"><span>users</span></div>'+
+            '<div class="tier-mrr" id="tm'+i+'"></div>'+
+            '</div>';
+        }).join('');
+        grid.dataset.built='1';
+      }
+      calcTiers();
+    }
+    function calcTiers(){
+      var totMRR=0,totU=0;
+      [0,1,2,3].forEach(function(i){
+        var p=+document.getElementById('tp'+i).value||0,u=+document.getElementById('tu'+i).value||0;
+        var m=p*u;totMRR+=m;totU+=u;
+        document.getElementById('tm'+i).textContent=fm(m)+'/mo';
+      });
+      var arpu=totU>0?totMRR/totU:0;
+      document.getElementById('blendedMRR').textContent=fm(totMRR);
+      document.getElementById('blendedARPU').textContent=fm(arpu);
+      document.getElementById('tierTotalUsers').textContent=totU.toLocaleString();
+    }
+
+    // ── CSV EXPORT ───────────────────────────────────────────
+    function exportCSV(){
+      var price=parseMoney(document.getElementById('price').value);
+      var su=+document.getElementById('startingUsers').value||0;
+      var nu=+document.getElementById('newUsers').value||0;
+      var ch=(+document.getElementById('churn').value||0)/100;
+      var co=parseMoney(document.getElementById('monthlyCosts').value);
+      var mo=+document.getElementById('projectionMonths').value||12;
+      var mp=mep(price),rows=simulate(su,nu,ch,mp,mo,co);
+      var csv='Month,Start Users,New Users,Churned,End Users,MRR,Profit\n'+
+        rows.map(function(r){return r.month+','+Math.round(r.startUsers)+','+r.newUsers+','+Math.round(r.churned)+','+Math.round(r.endUsers)+','+Math.round(r.mrr)+','+Math.round(r.profit);}).join('\n');
+      var a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+      a.download='saas-projection.csv';a.click();
+    }
+
+    // ── INIT ─────────────────────────────────────────────────
+    renderPresets();
+    renderModes();
+    renderBPs();
+    pickPreset(activePreset.id);
+    renderScenarios();
+    setTimeout(updateChart,150);
+  </script>
+</body>
+</html>
