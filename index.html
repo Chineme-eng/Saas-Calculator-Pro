@@ -31,22 +31,169 @@
     html{scroll-behavior:smooth}
     body{background:var(--bg);color:var(--text);font-family:var(--serif);font-size:16px;line-height:1.7;min-height:100vh;transition:background .3s,color .3s}
 
-    /* ── NAV ── */
-    nav{position:sticky;top:0;z-index:200;background:var(--bg);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:52px;backdrop-filter:blur(8px);gap:1rem}
-    .nav-brand{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted);text-decoration:none;flex-shrink:0}
-    .nav-brand span{color:var(--accent)}
-    .pro-badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:4px}
-    .nav-tabs{display:flex;gap:3px;overflow-x:auto;scrollbar-width:none}
-    .nav-tabs::-webkit-scrollbar{display:none}
-    .nav-tab{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:5px 11px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-    .nav-tab:hover{color:var(--accent)}
-    .nav-tab.active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
-    .nav-right{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
-    .theme-btn,.mini-btn,.mode-btn,.period-btn,.export-btn{font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
-    .theme-btn:hover,.mini-btn:hover,.mode-btn:hover,.period-btn:hover{border-color:var(--accent);color:var(--accent)}
-    .export-btn{border-color:var(--green);color:var(--green)}
-    .export-btn:hover{background:var(--green);color:#fff}
-    .mode-btn.active,.period-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  /* ── NAV (STAGNANT - SCROLLS AWAY) ── */
+nav {
+    position: relative;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px; /* Slimmer header */
+}
+
+.nav-brand {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    color: var(--muted);
+    text-decoration: none;
+    flex: 1; /* Pushes the pill to the exact center */
+}
+
+.nav-brand span { color: var(--accent); }
+
+.pro-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 20px;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .6rem;
+    flex: 1; /* Matches nav-brand to keep pill perfectly centered */
+}
+
+/* ── BASE STATE (Sitting perfectly flat in the header) ── */
+.nav-tabs {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    z-index: 300;
+    transition: all 0.2s ease;
+}
+
+.nav-tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .05em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-tab:hover { color: var(--accent); background: var(--bg2); }
+.nav-tab.active { background: var(--accent-bg); color: var(--accent) !important; }
+
+/* ── FLOATING STATE (Detaches when scrolled) ── */
+.nav-tabs.floating {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border2);
+    box-shadow: var(--shadow2);
+    gap: 6px;
+}
+
+[data-theme="light"] .nav-tabs.floating { background: rgba(255, 255, 255, 0.85); }
+[data-theme="dark"] .nav-tabs.floating { background: rgba(36, 31, 25, 0.85); }
+
+.nav-tabs.floating .nav-tab {
+    padding: 10px 20px;
+    border-radius: 999px;
+}
+
+.nav-tabs.floating .nav-tab.active {
+    background: var(--accent) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(184, 92, 42, 0.2);
+}
+
+/* ── BUTTONS (Inside right-nav) ── */
+.theme-btn, .mini-btn, .mode-btn, .period-btn, .export-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.theme-btn:hover, .mini-btn:hover, .mode-btn:hover, .period-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.export-btn { border-color: var(--green); color: var(--green); }
+.export-btn:hover { background: var(--green); color: #fff; }
+
+.mode-btn.active, .period-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ── NEW: FLOATING DARK MODE BUTTON ── */
+.floating-theme-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border2);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow2);
+    transition: all 0.2s ease;
+}
+
+.floating-theme-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Mobile scrolling fix for floating pill */
+@media (max-width: 760px) {
+    .nav-tabs.floating { width: 90%; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+    .nav-tabs.floating::-webkit-scrollbar { display: none; }
+}
+@media print {
+    .floating-theme-btn { display: none !important; }
+}
 
     /* ── PAGES ── */
     .page{display:none}.page.active{display:block}
@@ -318,8 +465,9 @@
 </head>
 <body>
 
-<nav>
+<nav id="mainNav">
   <a class="nav-brand" href="#" onclick="return false;"><span>Kat</span>Tools <span class="pro-badge">Pro</span></a>
+  
   <div class="nav-tabs" id="navTabs">
     <button class="nav-tab active" onclick="showPage('calculator')">Calculator</button>
     <button class="nav-tab" onclick="showPage('growtlab')">Growth Lab</button>
@@ -329,12 +477,14 @@
     <button class="nav-tab" onclick="showPage('timeline')">Timeline</button>
     <button class="nav-tab" onclick="showPage('tips')">Tips</button>
   </div>
+
   <div class="nav-right">
     <button class="export-btn" onclick="exportCSV()">↓ CSV</button>
     <button class="theme-btn" onclick="window.print()">Print</button>
-    <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">Dark mode</button>
-  </div>
+    </div>
 </nav>
+
+<button class="floating-theme-btn" onclick="toggleTheme()" id="themeBtn">Dark mode</button>
 
 <!-- ══════════════════════════ CALCULATOR PAGE -->
 <div class="page active" id="page-calculator">
@@ -750,6 +900,18 @@
 </div>
 
 <script>
+// ══════════════════════════════════════════════════════
+// DETACHING NAVIGATION
+// ══════════════════════════════════════════════════════
+window.addEventListener('scroll', () => {
+    const tabs = document.getElementById('navTabs');
+    if (window.scrollY > 40) {
+        tabs.classList.add('floating');
+    } else {
+        tabs.classList.remove('floating');
+    }
+});
+  
 // ══════════════════════════════════════════════════════
 // THEME
 // ══════════════════════════════════════════════════════
